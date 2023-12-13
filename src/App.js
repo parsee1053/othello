@@ -4,6 +4,7 @@ import './App.css';
 const EMPTY = 0;
 const BLACK = 1;
 const WHITE = -1;
+const BOARD_SIZE = 8;
 const dx = [-1, 0, 1, -1, 1, -1, 0, 1];
 const dy = [-1, -1, -1, 0, 0, 1, 1, 1];
 
@@ -116,7 +117,7 @@ class Board extends Component {
 class Game extends Component {
   constructor() {
     super();
-    const initArray = JSON.parse(JSON.stringify((new Array(8)).fill((new Array(8)).fill(EMPTY))));
+    const initArray = JSON.parse(JSON.stringify((new Array(BOARD_SIZE)).fill((new Array(BOARD_SIZE)).fill(EMPTY))));
     initArray[3][3] = WHITE;
     initArray[4][3] = BLACK;
     initArray[3][4] = BLACK;
@@ -140,8 +141,8 @@ class Game extends Component {
     const history = this.state.history.slice(0, this.state.stepNumber + 1);
     const current = history[history.length - 1];
     const squares = current.squares.slice();
-    for (let a = 0; a < 8; a++) {
-      for (let b = 0; b < 8; b++) {
+    for (let a = 0; a < BOARD_SIZE; a++) {
+      for (let b = 0; b < BOARD_SIZE; b++) {
         if (squares[a][b] === EMPTY && this.check(a, b, squares)) {
           isPass = false;
         }
@@ -192,7 +193,7 @@ class Game extends Component {
     while (true) {
       i += dx[d];
       j += dy[d];
-      if (i < 0 || i > 7 || j < 0 || j > 7) {
+      if (i < 0 || i >= BOARD_SIZE || j < 0 || j >= BOARD_SIZE) {
         return false;
       }
       if (squares[i][j] === EMPTY) {
@@ -250,7 +251,7 @@ class Game extends Component {
 
   reset() {
     if (window.confirm('リセットします．よろしいですか？')) {
-      const initArray = JSON.parse(JSON.stringify((new Array(8)).fill((new Array(8)).fill(EMPTY))));
+      const initArray = JSON.parse(JSON.stringify((new Array(BOARD_SIZE)).fill((new Array(BOARD_SIZE)).fill(EMPTY))));
       initArray[3][3] = WHITE;
       initArray[4][3] = BLACK;
       initArray[3][4] = BLACK;
@@ -270,8 +271,8 @@ class Game extends Component {
 
   count(color, squares) {
     let count = 0;
-    for (let a = 0; a < 8; a++) {
-      for (let b = 0; b < 8; b++) {
+    for (let a = 0; a < BOARD_SIZE; a++) {
+      for (let b = 0; b < BOARD_SIZE; b++) {
         if (squares[a][b] === color) {
           count++;
         }
