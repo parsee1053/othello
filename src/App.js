@@ -284,11 +284,13 @@ class Game extends Component {
     const history = this.state.history;
     const current = history[this.state.stepNumber];
     const isEnd = this.state.passCount >= 2 ? true : false;
+    const blackCount = this.count(BLACK, current.squares);
+    const whiteCount = this.count(WHITE, current.squares);
     let status;
     if (isEnd) {
-      if (this.count(BLACK, current.squares) > this.count(WHITE, current.squares)) {
+      if (blackCount > whiteCount) {
         status = '黒の勝ちです';
-      } else if (this.count(BLACK, current.squares) < this.count(WHITE, current.squares)) {
+      } else if (blackCount < whiteCount) {
         status = '白の勝ちです';
       } else {
         status = '引き分けです';
@@ -296,7 +298,7 @@ class Game extends Component {
     } else {
       status = (this.state.turn === BLACK ? '黒' : '白') + 'の番です';
     }
-    let score = '黒：' + this.count(BLACK, current.squares) + '　白：' + this.count(WHITE, current.squares);
+    let score = '黒：' + blackCount + '　白：' + whiteCount;
     return (
       <div className="Game">
         <div className="Game-Info">
