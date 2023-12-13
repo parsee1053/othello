@@ -136,18 +136,18 @@ class Game extends Component {
   }
 
   componentDidUpdate() {
-    let pass = true;
+    let isPass = true;
     const history = this.state.history.slice(0, this.state.stepNumber + 1);
     const current = history[history.length - 1];
     const squares = current.squares.slice();
     for (let a = 0; a < 8; a++) {
       for (let b = 0; b < 8; b++) {
-        if (squares[a][b] === EMPTY && this.check(a, b, squares) === true) {
-          pass = false;
+        if (squares[a][b] === EMPTY && this.check(a, b, squares)) {
+          isPass = false;
         }
       }
     }
-    if (pass === true) {
+    if (isPass) {
       let passCount = this.state.passCount;
       if (this.state.passCount === 0) {
         passCount++;
@@ -171,7 +171,7 @@ class Game extends Component {
     if (this.state.passCount >= 2) {
       return;
     }
-    if (this.put(i, j, squares) === false) {
+    if (!this.put(i, j, squares)) {
       alert('その場所には置けません');
       return;
     }
@@ -202,7 +202,7 @@ class Game extends Component {
         flag = true;
         continue;
       }
-      if (flag === true) {
+      if (flag) {
         break;
       }
       return false;
@@ -212,7 +212,7 @@ class Game extends Component {
 
   check(i, j, squares) {
     for (let d = 0; d < 8; d++) {
-      if (this.checkReverse(i, j, d, squares) === true) {
+      if (this.checkReverse(i, j, d, squares)) {
         return true;
       }
     }
@@ -236,12 +236,12 @@ class Game extends Component {
       return false;
     }
     for (let d = 0; d < 8; d++) {
-      if (this.checkReverse(i, j, d, squares) === true) {
+      if (this.checkReverse(i, j, d, squares)) {
         this.reverse(i, j, d, squares);
         flag = true;
       }
     }
-    if (flag === true) {
+    if (flag) {
       squares[i][j] = this.state.turn === BLACK ? BLACK : WHITE;
       return true;
     }
@@ -283,9 +283,9 @@ class Game extends Component {
   render() {
     const history = this.state.history;
     const current = history[this.state.stepNumber];
-    const end = this.state.passCount >= 2 ? true : false;
+    const isEnd = this.state.passCount >= 2 ? true : false;
     let status;
-    if (end === true) {
+    if (isEnd) {
       if (this.count(BLACK, current.squares) > this.count(WHITE, current.squares)) {
         status = '黒の勝ちです';
       } else if (this.count(BLACK, current.squares) < this.count(WHITE, current.squares)) {
