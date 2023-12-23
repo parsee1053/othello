@@ -61,17 +61,12 @@ class Game extends Component {
   }
 
   componentDidUpdate() {
-    let isPass = true;
     const history = this.state.history.slice(0, this.state.stepNumber + 1);
     const current = history[history.length - 1];
     const squares = current.squares.slice();
-    for (let a = 0; a < BOARD_SIZE; a++) {
-      for (let b = 0; b < BOARD_SIZE; b++) {
-        if (squares[a][b] === EMPTY && this.check(a, b, squares)) {
-          isPass = false;
-        }
-      }
-    }
+    const isPass = !squares.some((row, a) =>
+      row.some((cell, b) => cell === EMPTY && this.check(a, b, squares))
+    );
     if (isPass) {
       let passCount = this.state.passCount;
       if (this.state.passCount === 0) {
@@ -101,11 +96,7 @@ class Game extends Component {
       return;
     }
     this.setState({
-      history: history.concat([
-        {
-          squares: squares,
-        }
-      ]),
+      history: history.concat([{ squares: squares }]),
       stepNumber: history.length,
       turn: this.state.turn === BLACK ? WHITE : BLACK,
       passCount: 0,
@@ -185,36 +176,23 @@ class Game extends Component {
   }
 
   count(color, squares) {
-    let count = 0;
-    for (let a = 0; a < BOARD_SIZE; a++) {
-      for (let b = 0; b < BOARD_SIZE; b++) {
-        if (squares[a][b] === color) {
-          count++;
-        }
-      }
-    }
-    return count;
+    return squares.flat().filter(square => square === color).length;
   }
 
   render() {
-    const history = this.state.history;
-    const current = history[this.state.stepNumber];
-    const isEnd = this.state.passCount >= 2 ? true : false;
+    const { history, stepNumber, passCount, turn } = this.state;
+    const current = history[stepNumber];
     const blackCount = this.count(BLACK, current.squares);
     const whiteCount = this.count(WHITE, current.squares);
-    let status;
-    if (isEnd) {
-      if (blackCount > whiteCount) {
-        status = '黒の勝ちです';
-      } else if (blackCount < whiteCount) {
-        status = '白の勝ちです';
-      } else {
-        status = '引き分けです';
-      }
-    } else {
-      status = (this.state.turn === BLACK ? '黒' : '白') + 'の番です';
-    }
-    let score = '黒：' + blackCount + '　白：' + whiteCount;
+    const isEnd = passCount >= 2;
+    const status = isEnd
+      ? blackCount > whiteCount
+        ? '黒の勝ちです'
+        : blackCount < whiteCount
+          ? '白の勝ちです'
+          : '引き分けです'
+      : `${turn === BLACK ? '黒' : '白'}の番です`;
+    const score = `黒：${blackCount}　白：${whiteCount}`;
     return (
       <div className="Game">
         <div className="Game-Info">
