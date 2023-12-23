@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import './App.css';
 
 const EMPTY = 0;
@@ -38,21 +38,14 @@ function Board(props) {
   );
 }
 
-class Game extends Component {
-  constructor() {
-    super();
-    this.state = {
-      history: [{ squares: this.initializeSquares() }],
-      stepNumber: 0,
-      turn: BLACK,
-      passCount: 0,
-    };
+function Game() {
+  const [history, setHistory] = useState([{ squares: initializeSquares() }]);
+  const [stepNumber, setStepNumber] = useState(0);
+  const [turn, setTurn] = useState(BLACK);
+  const [passCount, setPassCount] = useState(0);
 
-    this.reset = this.reset.bind(this);
-  }
-
-  initializeSquares() {
-    const squares = JSON.parse(JSON.stringify((new Array(BOARD_SIZE)).fill((new Array(BOARD_SIZE)).fill(EMPTY))));
+  function initializeSquares() {
+    const squares = Array.from({ length: BOARD_SIZE }, () => Array.from({ length: BOARD_SIZE }, () => EMPTY));
     squares[BOARD_SIZE / 2 - 1][BOARD_SIZE / 2 - 1] = WHITE;
     squares[BOARD_SIZE / 2][BOARD_SIZE / 2 - 1] = BLACK;
     squares[BOARD_SIZE / 2 - 1][BOARD_SIZE / 2] = BLACK;
@@ -60,50 +53,42 @@ class Game extends Component {
     return squares;
   }
 
-  componentDidUpdate() {
-    const history = this.state.history.slice(0, this.state.stepNumber + 1);
-    const current = history[history.length - 1];
+  useEffect(() => {
+    const current = history[stepNumber];
     const squares = current.squares.slice();
     const isPass = !squares.some((row, a) =>
-      row.some((cell, b) => cell === EMPTY && this.check(a, b, squares))
+      row.some((cell, b) => cell === EMPTY && check(a, b, squares))
     );
     if (isPass) {
-      let passCount = this.state.passCount;
-      if (this.state.passCount === 0) {
-        passCount++;
-        this.setState({
-          turn: this.state.turn === BLACK ? WHITE : BLACK,
-          passCount: passCount,
-        });
-      } else if (this.state.passCount === 1) {
-        passCount++;
-        this.setState({
-          passCount: passCount,
-        });
+      let newPassCount = passCount;
+      if (passCount === 0) {
+        newPassCount++;
+        setTurn(turn === BLACK ? WHITE : BLACK);
+        setPassCount(newPassCount);
+      } else if (passCount === 1) {
+        newPassCount++;
+        setPassCount(newPassCount);
       }
     }
-  }
+  }, [history, stepNumber, passCount]);
 
-  handleClick(i, j) {
-    const history = this.state.history.slice(0, this.state.stepNumber + 1);
-    const current = history[history.length - 1];
+  function handleClick(i, j) {
+    const current = history[stepNumber];
     const squares = current.squares.slice();
-    if (this.state.passCount >= 2) {
+    if (passCount >= 2) {
       return;
     }
-    if (!this.put(i, j, squares)) {
+    if (!put(i, j, squares)) {
       alert('その場所には置けません');
       return;
     }
-    this.setState({
-      history: history.concat([{ squares: squares }]),
-      stepNumber: history.length,
-      turn: this.state.turn === BLACK ? WHITE : BLACK,
-      passCount: 0,
-    });
+    setHistory(history.concat([{ squares: squares }]));
+    setStepNumber(history.length);
+    setTurn(turn === BLACK ? WHITE : BLACK);
+    setPassCount(0);
   }
 
-  checkReverse(i, j, d, squares) {
+  function checkReverse(i, j, d, squares) {
     let flag = false;
     while (true) {
       i += dx[d];
@@ -114,7 +99,7 @@ class Game extends Component {
       if (squares[i][j] === EMPTY) {
         return false;
       }
-      if (squares[i][j] === (this.state.turn === BLACK ? WHITE : BLACK)) {
+      if (squares[i][j] === (turn === BLACK ? WHITE : BLACK)) {
         flag = true;
         continue;
       }
@@ -126,91 +111,86 @@ class Game extends Component {
     return true;
   }
 
-  check(i, j, squares) {
+  function check(i, j, squares) {
     for (let d = 0; d < 8; d++) {
-      if (this.checkReverse(i, j, d, squares)) {
+      if (checkReverse(i, j, d, squares)) {
         return true;
       }
     }
     return false;
   }
 
-  reverse(i, j, d, squares) {
+  function reverse(i, j, d, squares) {
     while (true) {
       i += dx[d];
       j += dy[d];
-      if (squares[i][j] === (this.state.turn === BLACK ? BLACK : WHITE)) {
+      if (squares[i][j] === (turn === BLACK ? BLACK : WHITE)) {
         break;
       }
-      squares[i][j] = this.state.turn === BLACK ? BLACK : WHITE;
+      squares[i][j] = turn === BLACK ? BLACK : WHITE;
     }
   }
 
-  put(i, j, squares) {
-    let flag = false;
+  function put(i, j, squares) {
     if (squares[i][j] !== EMPTY) {
       return false;
     }
+    let reversed = false;
     for (let d = 0; d < 8; d++) {
-      if (this.checkReverse(i, j, d, squares)) {
-        this.reverse(i, j, d, squares);
-        flag = true;
+      if (checkReverse(i, j, d, squares)) {
+        reverse(i, j, d, squares);
+        reversed = true;
       }
     }
-    if (flag) {
-      squares[i][j] = this.state.turn === BLACK ? BLACK : WHITE;
-      return true;
+    if (reversed) {
+      squares[i][j] = turn === BLACK ? BLACK : WHITE;
     }
-    return false;
+    return reversed;
   }
 
-  reset() {
+  function reset() {
     if (window.confirm('リセットします．よろしいですか？')) {
-      this.setState({
-        history: [{ squares: this.initializeSquares() }],
-        stepNumber: 0,
-        turn: BLACK,
-        passCount: 0,
-      });
+      setHistory([{ squares: initializeSquares() }]);
+      setStepNumber(0);
+      setTurn(BLACK);
+      setPassCount(0);
     }
   }
 
-  count(color, squares) {
+  function count(color, squares) {
     return squares.flat().filter(square => square === color).length;
   }
 
-  render() {
-    const { history, stepNumber, passCount, turn } = this.state;
-    const current = history[stepNumber];
-    const blackCount = this.count(BLACK, current.squares);
-    const whiteCount = this.count(WHITE, current.squares);
-    const isEnd = passCount >= 2;
-    const status = isEnd
-      ? blackCount > whiteCount
-        ? '黒の勝ちです'
-        : blackCount < whiteCount
-          ? '白の勝ちです'
-          : '引き分けです'
-      : `${turn === BLACK ? '黒' : '白'}の番です`;
-    const score = `黒：${blackCount}　白：${whiteCount}`;
-    return (
-      <div className="Game">
-        <div className="Game-Info">
-          <div className="Info-Status">{status}</div>
-          <div className="Info-Score">{score}</div>
-        </div>
-        <div className="Game-Board">
-          <Board
-            squares={current.squares}
-            onClick={(i, j) => this.handleClick(i, j)}
-          />
-        </div>
-        <div className="Game-Button">
-          <button onClick={this.reset}>リセット</button>
-        </div>
+  const current = history[stepNumber];
+  const blackCount = count(BLACK, current.squares);
+  const whiteCount = count(WHITE, current.squares);
+  const isEnd = passCount >= 2;
+  const status = isEnd
+    ? blackCount > whiteCount
+      ? '黒の勝ちです'
+      : blackCount < whiteCount
+        ? '白の勝ちです'
+        : '引き分けです'
+    : `${turn === BLACK ? '黒' : '白'}の番です`;
+  const score = `黒：${blackCount}　白：${whiteCount}`;
+
+  return (
+    <div className="Game">
+      <div className="Game-Info">
+        <div className="Info-Status">{status}</div>
+        <div className="Info-Score">{score}</div>
       </div>
-    );
-  }
+      <div className="Game-Board">
+        <Board
+          squares={current.squares}
+          onClick={(i, j) => handleClick(i, j)}
+        />
+      </div>
+      <div className="Game-Button">
+        <button onClick={reset}>リセット</button>
+      </div>
+    </div>
+  );
 }
 
 export default function App() {
