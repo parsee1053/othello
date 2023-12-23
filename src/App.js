@@ -29,13 +29,11 @@ function Board(props) {
 
   return (
     <div className="Board">
-      {Array(BOARD_SIZE).fill(0).map((_, row) => {
-        return (
-          <div key={row} className="Board-Row">
-            {Array(BOARD_SIZE).fill(row).map((value, index) => renderSquare(value, index))}
-          </div>
-        );
-      })}
+      {[...Array(BOARD_SIZE).keys()].map(row => (
+        <div key={row} className="Board-Row">
+          {[...Array(BOARD_SIZE).keys()].map(col => renderSquare(row, col))}
+        </div>
+      ))}
     </div>
   );
 }
@@ -43,23 +41,23 @@ function Board(props) {
 class Game extends Component {
   constructor() {
     super();
-    const initArray = JSON.parse(JSON.stringify((new Array(BOARD_SIZE)).fill((new Array(BOARD_SIZE)).fill(EMPTY))));
-    initArray[3][3] = WHITE;
-    initArray[4][3] = BLACK;
-    initArray[3][4] = BLACK;
-    initArray[4][4] = WHITE;
     this.state = {
-      history: [
-        {
-          squares: initArray,
-        }
-      ],
+      history: [{ squares: this.initializeSquares() }],
       stepNumber: 0,
       turn: BLACK,
       passCount: 0,
     };
 
     this.reset = this.reset.bind(this);
+  }
+
+  initializeSquares() {
+    const squares = JSON.parse(JSON.stringify((new Array(BOARD_SIZE)).fill((new Array(BOARD_SIZE)).fill(EMPTY))));
+    squares[BOARD_SIZE / 2 - 1][BOARD_SIZE / 2 - 1] = WHITE;
+    squares[BOARD_SIZE / 2][BOARD_SIZE / 2 - 1] = BLACK;
+    squares[BOARD_SIZE / 2 - 1][BOARD_SIZE / 2] = BLACK;
+    squares[BOARD_SIZE / 2][BOARD_SIZE / 2] = WHITE;
+    return squares;
   }
 
   componentDidUpdate() {
@@ -177,17 +175,8 @@ class Game extends Component {
 
   reset() {
     if (window.confirm('リセットします．よろしいですか？')) {
-      const initArray = JSON.parse(JSON.stringify((new Array(BOARD_SIZE)).fill((new Array(BOARD_SIZE)).fill(EMPTY))));
-      initArray[3][3] = WHITE;
-      initArray[4][3] = BLACK;
-      initArray[3][4] = BLACK;
-      initArray[4][4] = WHITE;
       this.setState({
-        history: [
-          {
-            squares: initArray,
-          }
-        ],
+        history: [{ squares: this.initializeSquares() }],
         stepNumber: 0,
         turn: BLACK,
         passCount: 0,
